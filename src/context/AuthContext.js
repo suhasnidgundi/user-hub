@@ -12,7 +12,7 @@ import {
     updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/utils/firebaseClient';
+import { firebase_auth, db } from '@/utils/firebaseClient';
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -28,7 +28,7 @@ export const AuthContextProvider = ({ children }) => {
 
     // Firebase auth state listener
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = onAuthStateChanged(firebase_auth, async (firebaseUser) => {
             if (firebaseUser) {
                 setUser(firebaseUser);
 
@@ -71,7 +71,7 @@ export const AuthContextProvider = ({ children }) => {
     // Email/Password Registration
     const signup = async (email, password, displayName) => {
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(firebase_auth, email, password);
 
             // Update profile with displayName
             await updateProfile(userCredential.user, { displayName });
@@ -100,7 +100,7 @@ export const AuthContextProvider = ({ children }) => {
     // Email/Password Login
     const login = async (email, password) => {
         try {
-            const result = await signInWithEmailAndPassword(auth, email, password);
+            const result = await signInWithEmailAndPassword(firebase_auth, email, password);
             return result.user;
         } catch (error) {
             throw error;
@@ -111,7 +111,7 @@ export const AuthContextProvider = ({ children }) => {
     const signInWithGoogle = async () => {
         try {
             const provider = new GoogleAuthProvider();
-            const result = await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(firebase_auth, provider);
 
             // Check if user exists in Firestore
             const userRef = doc(db, 'users', result.user.uid);
@@ -145,13 +145,13 @@ export const AuthContextProvider = ({ children }) => {
     // Log out
     const logout = async () => {
         setUser(null);
-        await signOut(auth);
+        await signOut(firebase_auth);
         await nextAuthSignOut({ callbackUrl: '/' });
     };
 
     // Password reset
     const resetPassword = (email) => {
-        return sendPasswordResetEmail(auth, email);
+        return sendPasswordResetEmail(firebase_auth, email);
     };
 
     // Update user preferences
