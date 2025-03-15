@@ -5,11 +5,11 @@ import dynamic from "next/dynamic";
 dynamic(() => import("bootstrap/dist/js/bootstrap.min.js"));
 
 export const metadata = {
-  title: "",
-  description: "",
+  title: "User Hub",
+  description: "A user management hub",
 };
 
-export default function RootLayout({ children, session }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>

@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { firebase_auth } from "@/utils/firebaseClient";
+
 // Only import FirestoreAdapter on the server
 const adapter = typeof window === 'undefined' ? FirestoreAdapter() : null;
 
@@ -12,7 +13,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     theme: { logo: "https://authjs.dev/img/logo-sm.png", colorScheme: "auto" },
     adapter,
     providers: [
-        Google,
+        Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+        }),
         Credentials({
             name: 'Credentials',
             credentials: {
@@ -44,23 +48,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 }
             }
         }),
-
     ],
-    basePath: "/auth",
     session: {
         strategy: "jwt",
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     callbacks: {
-        async authorized() {
-            return true;
-        },
-        async jwt(token, user, account, profile, isNewUser) {
+        async jwt({ token, user, account }) {
+            // Add user info to token if available
+            if (user) {
+                token.id = user.id;
+            }
             return token;
         },
-        async session(session, user) {
+        async session({ session, token }) {
+            // Add user id to session from token
+            if (session?.user) {
+                session.user.id = token.id;
+            }
             return session;
         },
     },
-    experimental: { enableWebAuthn: true },
+    pages: {
+        signIn: '/auth/signin',
+        error: '/auth/error'
+    },
 });
